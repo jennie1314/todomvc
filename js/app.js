@@ -1,59 +1,31 @@
 (function (window) {
 	'use strict'; 
-
 	var KEY = 'todos',
-		// 全局的数组，存储所有todos的信息 
 		todos = JSON.parse(window.localStorage.getItem(KEY)) || [],
 		oTitle = $('.new-todo'),
 		oToDoList = $('.todo-list'),
 		oToggleAll = $('#toggle-all');
-
-	// 初次渲染
-	oToggleAll.checked = isAllToDoCompleted();
-	showToDoList(todos);
-
-
+	
+	// 初始化
+	init();
 	// 添加 
 	oTitle.onkeyup = function(ev) {
 		// 如果按下的是回车键 并且 input的值trim完毕之后仍不为空，进行添加操作
 		if(ev.keyCode === 13 && this.value.trim()) {
-			// 向数组中push一个对象
 			todos.push({
-				// 编号
-				id: Date.now(),
-				// 状态
-				completed: false,
-				// 名字 
-				title: this.value.trim()
+				id: Date.now(),// 编号
+				completed: false,// 状态
+				title: this.value.trim()// 名字 
 			});
 			// 初次渲染  根据数据生成列表结构
 			showToDoList(todos,JSON.stringify(todos));
 			// 清空input的value
 			this.value = '';
-			
 			console.log('todos增加了，需要存储了');
 			// 存 
 			window.localStorage.setItem(KEY,JSON.stringify(todos));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		}
 	};
-
 	// ul实现事件委托
 	oToDoList.onclick = function(ev) {
 		// 1. 代理复选框的事件
@@ -111,7 +83,6 @@
 		// 更新视图，只需要根据最近todos生成结构即可
 		showToDoList(todos);
 	};
-
 	// 根据数据生成DOM结构 
 	function showToDoList(todos) {
 		// 先清空
@@ -160,7 +131,6 @@
 		}
 		oToDoList.appendChild(oFrag);
 	}
-
 	// 封装存储的方法，根据key存储对应的value
 	function save(key,value) {
 		var v = null;
@@ -174,7 +144,6 @@
 		}
 		return window.localStorage.setItem(key,value);
 	}
-
 	// 根据id找下标 
 	function findIndexById(id) {
 		for(var i = 0; i < todos.length; i++) {
@@ -195,8 +164,10 @@
 		}
 		return flag;
 	}
-	// 封装两个获取元素的方法
-
+	function init() {
+		oToggleAll.checked = isAllToDoCompleted();
+		showToDoList(todos);
+	}
 	// 获取单个元素
 	function $(selector,parent) {
 		if(!parent) {
@@ -211,5 +182,4 @@
 		}
 		return parent.querySelectorAll(selector);
 	}
-
 })(window);
