@@ -6,3 +6,11 @@ remove this comment if used
 remove this file if not
 
 */
+
+.footer.hidden {
+	display: none;
+}
+
+#toggle-all.hidden {
+	display: none;
+}

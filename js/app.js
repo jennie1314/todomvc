@@ -4,9 +4,11 @@
 		todos = JSON.parse(window.localStorage.getItem(KEY)) || [],
 		oTitle = $('.new-todo'),
 		oToDoList = $('.todo-list'),
-		oToggleAll = $('#toggle-all');
-	
+		oToggleAll = $('#toggle-all'),
+		oLabel = $('[for=toggle-all]'),
+		oFooter = $('.footer');
 	// 初始化
+	
 	init();
 	// 添加 
 	oTitle.onkeyup = function(ev) {
@@ -24,6 +26,9 @@
 			console.log('todos增加了，需要存储了');
 			// 存 
 			window.localStorage.setItem(KEY,JSON.stringify(todos));
+			// 如果footer含有hidden这个类，删除掉hidden，这样盒子就显示了
+			oFooter.classList.contains('hidden') && oFooter.classList.remove('hidden');
+			oLabel.classList.contains('hidden') && oLabel.classList.remove('hidden');
 		}
 	};
 	// ul实现事件委托
@@ -67,6 +72,11 @@
 				todos.splice(index,1);
 				// 存
 				window.localStorage.setItem(KEY,JSON.stringify(todos));
+				// 没删除一次，需要检测todos是否为空，如果为空，footer隐藏，否则显示
+				isEmpty() ? oFooter.classList.add('hidden') : oFooter.classList.remove('hidden') 
+				isEmpty() ? oLabel.classList.add('hidden') : oLabel.classList.remove('hidden') 
+				// 2. 删除视图
+				this.removeChild(ev.target.parentNode.parentNode);
 			}
 		}
 	};
@@ -133,16 +143,7 @@
 	}
 	// 封装存储的方法，根据key存储对应的value
 	function save(key,value) {
-		var v = null;
-		if(typeof value !== 'string') {
-			if(typeof value === 'object') {
-				v = JSON.stringify(value);
-			}else {
-				v = value.toString();
-			}
-			return window.localStorage.setItem(key,v);
-		}
-		return window.localStorage.setItem(key,value);
+		
 	}
 	// 根据id找下标 
 	function findIndexById(id) {
@@ -164,10 +165,20 @@
 		}
 		return flag;
 	}
+
+	// 检测todos是否为空
+	function isEmpty() {
+		return todos.length === 0;
+	}
+
+	// 初始化的函数
 	function init() {
 		oToggleAll.checked = isAllToDoCompleted();
 		showToDoList(todos);
+		isEmpty() ? oFooter.classList.add('hidden') : oFooter.classList.remove('hidden');
+		isEmpty() ? oLabel.classList.add('hidden') :  oLabel.classList.remove('hidden');
 	}
+
 	// 获取单个元素
 	function $(selector,parent) {
 		if(!parent) {
