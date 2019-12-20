@@ -1,14 +1,18 @@
 (function (window) {
 	'use strict'; 
 	var KEY = 'todos',
-		todos = JSON.parse(window.localStorage.getItem(KEY)) || [],
+		todos = JSON.parse(get(KEY)) || [],
 		oTitle = $('.new-todo'),
 		oToDoList = $('.todo-list'),
 		oToggleAll = $('#toggle-all'),
 		oLabel = $('[for=toggle-all]'),
-		oFooter = $('.footer');
+		oFooter = $('.footer'),
+		oCount = $('strong');
 	// 初始化
 	
+
+
+
 	init();
 	// 添加 
 	oTitle.onkeyup = function(ev) {
@@ -25,10 +29,15 @@
 			this.value = '';
 			console.log('todos增加了，需要存储了');
 			// 存 
-			window.localStorage.setItem(KEY,JSON.stringify(todos));
+			save(KEY,todos);
+			// 每添加一次，toggle-all都是不选中
+			oToggleAll.checked = false;
 			// 如果footer含有hidden这个类，删除掉hidden，这样盒子就显示了
 			oFooter.classList.contains('hidden') && oFooter.classList.remove('hidden');
 			oLabel.classList.contains('hidden') && oLabel.classList.remove('hidden');
+
+			// 更新未完成todo的数量
+			oCount.innerText = unCompletedToDosLength();
 		}
 	};
 	// ul实现事件委托
@@ -49,11 +58,23 @@
 			}
 			console.log('todo自身的的状态变了，需要存储');
 			// 存
-			window.localStorage.setItem(KEY,JSON.stringify(todos));
+			save(KEY,todos);
 			// 当所有的todo都被选中了，需要让id是toggle-all这个复选框选中
-			
 			oToggleAll.checked = isAllToDoCompleted();
+
+			// 更新未完成todo的数量
+			oCount.innerText = unCompletedToDosLength();
+
+
+
+
+
+
+
+
+
 		}
+
 
 		// 2. 代理button的单击事件 因为button有destroy的class，
 		if(ev.target.classList.contains('destroy')) {
@@ -71,12 +92,16 @@
 			if(index !== -1) {
 				todos.splice(index,1);
 				// 存
-				window.localStorage.setItem(KEY,JSON.stringify(todos));
+				save(KEY,todos);
 				// 没删除一次，需要检测todos是否为空，如果为空，footer隐藏，否则显示
 				isEmpty() ? oFooter.classList.add('hidden') : oFooter.classList.remove('hidden') 
 				isEmpty() ? oLabel.classList.add('hidden') : oLabel.classList.remove('hidden') 
 				// 2. 删除视图
 				this.removeChild(ev.target.parentNode.parentNode);
+				// 3. 每当删除一个todo，都需要检测其它的todo是否都选中，
+				oToggleAll.checked = isAllToDoCompleted();
+				// 4. 更新未完成todo的数量
+				oCount.innerText = unCompletedToDosLength();
 			}
 		}
 	};
@@ -86,12 +111,14 @@
 		for(var i = 0; i < todos.length; i++) {
 			todos[i].completed = this.checked;
 		}
-
 		console.log('每条todo的状态变了，需要存储');
 		// 存
-		window.localStorage.setItem(KEY,JSON.stringify(todos));
+		save(KEY,todos);
 		// 更新视图，只需要根据最近todos生成结构即可
 		showToDoList(todos);
+
+		// 更新未完成todo的数量
+		oCount.innerText = unCompletedToDosLength();
 	};
 	// 根据数据生成DOM结构 
 	function showToDoList(todos) {
@@ -143,8 +170,31 @@
 	}
 	// 封装存储的方法，根据key存储对应的value
 	function save(key,value) {
-		
+		var v = null;
+		if(typeof value !== 'string') {
+			if(typeof value === 'object') {
+				v = JSON.stringify(value);
+			}else {
+				v = value.toString();
+			}
+			return window.localStorage.setItem(key,v);
+		}
+		window.localStorage.setItem(key,value);
 	}
+	// 取 
+	function get(key) {
+		return window.localStorage.getItem(key);
+	} 
+	// 删
+	function remove(key) {
+		window.localStorage.removeItem(key);
+	}
+
+
+
+
+
+
 	// 根据id找下标 
 	function findIndexById(id) {
 		for(var i = 0; i < todos.length; i++) {
@@ -174,9 +224,23 @@
 	// 初始化的函数
 	function init() {
 		oToggleAll.checked = isAllToDoCompleted();
+		oTitle.focus();
+		// 更新未完成todo的数量
+		oCount.innerText = unCompletedToDosLength();
 		showToDoList(todos);
 		isEmpty() ? oFooter.classList.add('hidden') : oFooter.classList.remove('hidden');
 		isEmpty() ? oLabel.classList.add('hidden') :  oLabel.classList.remove('hidden');
+	}
+
+	// 计算todos中已完成的todo的数量
+	function unCompletedToDosLength() {
+		var count = 0;
+		for(var i = 0; i < todos.length; i++) {
+			if(!todos[i].completed) {
+				count++;
+			}
+		}
+		return count;
 	}
 
 	// 获取单个元素
