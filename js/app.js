@@ -7,12 +7,11 @@
 		oToggleAll = $('#toggle-all'),
 		oLabel = $('[for=toggle-all]'),
 		oFooter = $('.footer'),
-		oCount = $('strong');
+		oCount = $('strong'),
+		oClear = $('.clear-completed'),
+		aTab = $$('.footer .filters li a');
+
 	// 初始化
-	
-
-
-
 	init();
 	// 添加 
 	oTitle.onkeyup = function(ev) {
@@ -38,6 +37,9 @@
 
 			// 更新未完成todo的数量
 			oCount.innerText = unCompletedToDosLength();
+
+
+			clearCompletedElementVisible();
 		}
 	};
 	// ul实现事件委托
@@ -65,6 +67,12 @@
 			// 更新未完成todo的数量
 			oCount.innerText = unCompletedToDosLength();
 
+
+			clearCompletedElementVisible();
+
+
+
+			showToDoList(doFilter($('a.selected').getAttribute('type')));
 
 
 
@@ -102,7 +110,10 @@
 				oToggleAll.checked = isAllToDoCompleted();
 				// 4. 更新未完成todo的数量
 				oCount.innerText = unCompletedToDosLength();
+
+				clearCompletedElementVisible();
 			}
+
 		}
 	};
 	// 全选复选框的onchange事件
@@ -119,6 +130,11 @@
 
 		// 更新未完成todo的数量
 		oCount.innerText = unCompletedToDosLength();
+
+		clearCompletedElementVisible();
+
+		showToDoList(doFilter($('a.selected').getAttribute('type')));
+
 	};
 	// 根据数据生成DOM结构 
 	function showToDoList(todos) {
@@ -230,6 +246,9 @@
 		showToDoList(todos);
 		isEmpty() ? oFooter.classList.add('hidden') : oFooter.classList.remove('hidden');
 		isEmpty() ? oLabel.classList.add('hidden') :  oLabel.classList.remove('hidden');
+
+		clearCompletedElementVisible()
+		
 	}
 
 	// 计算todos中已完成的todo的数量
@@ -243,6 +262,116 @@
 		return count;
 	}
 
+
+
+
+	// 检测todos中是否有已完成的todo
+	function hasCompletedToDo() {
+		for(var i = 0; i < todos.length; i++) {
+			if(todos[i].completed) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+
+
+	// 控制clear-completed的显示和隐藏
+	function clearCompletedElementVisible() {
+		hasCompletedToDo() ? 
+			oClear.classList.remove('hidden') : 
+			oClear.classList.add('hidden')
+	}
+
+
+
+	// 监听clear-completed的单击事件
+	oClear.onclick = function() {
+		/*
+			1. 删除数据
+				从todos数组中，将所有todo的completed属性为true全部删除掉
+			2. 删除视图 
+
+			3. 自身隐藏
+
+		*/ 
+
+		// 从数组中删除
+		for(var i = 0; i < todos.length;i++) {
+			if(todos[i].completed) {
+				todos.splice(i,1);
+				i--;
+			}
+		}
+		// 当把所有todo的completed属性为true全部删除掉之后，重新存储一次
+		save(KEY,todos);
+
+		// 重新渲染一次视图
+		showToDoList(todos);
+
+		// 让自身隐藏
+		this.classList.add('hidden');
+	};
+
+
+
+
+	// 单击a标签，实现视图的切换  all  active  completed
+	for(var i = 0; i < aTab.length; i++) {
+		aTab[i].onclick = function() {
+			/*
+				做两件事：
+					1. 单击谁给，谁高亮（selected控制高亮）
+						给当前的a添加selected这个类，其它的a需要删除selected这个类
+
+					2. 视图的切换
+
+						all   		--->  展示所有的
+						active 		--->  展示未完成的
+						completed 	--->  展示完成的
+			*/
+			for(var j = 0; j < aTab.length; j++) {
+				aTab[j].classList.remove('selected');
+			}
+			this.classList.add('selected');
+
+
+			// 访问type属性
+			var type = this.getAttribute('type');
+
+			// 统一渲染
+			showToDoList(doFilter(type));
+		};
+	} 
+
+
+
+	// 过滤todos的方法，根据不同的type做过滤   all   active  completed
+	function doFilter(type) {
+		var filteredToDos = [];
+		switch(type) {
+			case 'all':
+				filteredToDos = todos;
+				break;
+			case 'active':
+				for(var i = 0; i < todos.length; i++) {
+					if(!todos[i].completed) {
+						filteredToDos.push(todos[i]);
+					}
+				}
+				break;
+			case 'completed':
+				for(var i = 0; i < todos.length; i++) {
+					if(todos[i].completed) {
+						filteredToDos.push(todos[i]);
+					}
+				}
+				break;
+		}
+		return filteredToDos;
+	}
 	// 获取单个元素
 	function $(selector,parent) {
 		if(!parent) {
